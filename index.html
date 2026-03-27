@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReadGenius - AI-Powered Document Intelligence</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --accent: #ec4899;
+            --dark: #0f172a;
+            --light: #f8fafc;
+            --text: #1e293b;
+            --text-light: #64748b;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Navigation */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 5%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -1px;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: var(--primary);
+        }
+
+        .cta-button {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 6rem 5%;
+            text-align: center;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+            background: linear-gradient(135deg, var(--dark), var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            color: var(--text-light);
+            margin-bottom: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .secondary-button {
+            background: white;
+            color: var(--primary);
+            padding: 0.75rem 1.5rem;
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .secondary-button:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Features Section */
+        .features {
+            padding: 5rem 5%;
+            background: white;
+            margin: 3rem 0;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 3rem;
+            color: var(--dark);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            padding: 2rem;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.15);
+            border-color: var(--primary);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+        }
+
+        .feature-card p {
+            color: var(--text-light);
+            font-size: 0.95rem;
+        }
+
+        /* Demo Section */
+        .demo {
+            padding: 5rem 5%;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            text-align: center;
+        }
+
+        .demo h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .demo p {
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            opacity: 0.95;
+        }
+
+        .demo-box {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .demo-box input {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 1rem;
+        }
+
+        .demo-box button {
+            width: 100%;
+            padding: 1rem;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .demo-box button:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 25px rgba(236, 72, 153, 0.3);
+        }
+
+        /* Pricing Section */
+        .pricing {
+            padding: 5rem 5%;
+            background: white;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .pricing-card {
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .pricing-card.featured {
+            border-color: var(--primary);
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(99, 102, 241, 0.1));
+            transform: scale(1.05);
+        }
+
+        .pricing-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .price {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 1rem 0;
+        }
+
+        .price-period {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .pricing-features {
+            list-style: none;
+            margin: 2rem 0;
+            text-align: left;
+        }
+
+        .pricing-features li {
+            padding: 0.5rem 0;
+            color: var(--text-light);
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .pricing-features li:before {
+            content: "✓ ";
+            color: var(--primary);
+            font-weight: bold;
+            margin-right: 0.5rem;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--dark);
+            color: white;
+            padding: 3rem 5%;
+            text-align: center;
+        }
+
+        footer p {
+            margin-bottom: 1rem;
+            opacity: 0.8;
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .social-links a {
+            color: white;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .social-links a:hover {
+            color: var(--primary);
+        }
+
+        /* Animations */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            nav ul {
+                gap: 1rem;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+
+            .pricing-card.featured {
+                transform: scale(1);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="logo">ReadGenius</div>
+        <ul>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#pricing">Pricing</a></li>
+            <li><a href="#demo">Demo</a></li>
+        </ul>
+        <button class="cta-button">Get Started</button>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1>Transform Documents Into Insights</h1>
+        <p>ReadGenius uses AI to instantly summarize, analyze, and extract key information from any document. Save hours of reading time.</p>
+        <div class="hero-buttons">
+            <button class="cta-button">Start Free Trial</button>
+            <a href="#demo" class="secondary-button">See Demo</a>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <h2 class="section-title">Powerful Features</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">📄</div>
+                <h3>Smart Summarization</h3>
+                <p>Get concise, accurate summaries of any length document in seconds using advanced AI.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔑</div>
+                <h3>Key Concepts</h3>
+                <p>Automatically extract and highlight the most important concepts and ideas.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">❓</div>
+                <h3>Q&A Generation</h3>
+                <p>Generate relevant questions and answers to test your understanding.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">😊</div>
+                <h3>Sentiment Analysis</h3>
+                <p>Understand the emotional tone and sentiment of any text.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Advanced Analytics</h3>
+                <p>Get detailed metrics including reading time, complexity, and more.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📥</div>
+                <h3>Easy Export</h3>
+                <p>Export your analysis as PDF, JSON, or share directly with others.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Demo Section -->
+    <section class="demo" id="demo">
+        <h2>Try It Now</h2>
+        <p>Upload a document and see ReadGenius in action</p>
+        <div class="demo-box">
+            <input type="file" placeholder="Choose a document..." accept=".pdf,.txt,.docx">
+            <button>Analyze Document</button>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="pricing" id="pricing">
+        <h2 class="section-title">Simple, Transparent Pricing</h2>
+        <div class="pricing-grid">
+            <div class="pricing-card">
+                <h3>Starter</h3>
+                <div class="price">Free</div>
+                <div class="price-period">Forever</div>
+                <ul class="pricing-features">
+                    <li>5 analyses/month</li>
+                    <li>Basic summarization</li>
+                    <li>Community support</li>
+                </ul>
+                <button class="secondary-button">Get Started</button>
+            </div>
+            <div class="pricing-card featured">
+                <h3>Professional</h3>
+                <div class="price">$9</div>
+                <div class="price-period">per month</div>
+                <ul class="pricing-features">
+                    <li>Unlimited analyses</li>
+                    <li>All features</li>
+                    <li>Priority support</li>
+                    <li>API access</li>
+                </ul>
+                <button class="cta-button">Start Free Trial</button>
+            </div>
+            <div class="pricing-card">
+                <h3>Enterprise</h3>
+                <div class="price">Custom</div>
+                <div class="price-period">contact us</div>
+                <ul class="pricing-features">
+                    <li>Custom solutions</li>
+                    <li>Dedicated support</li>
+                    <li>SSO & security</li>
+                    <li>SLA guarantee</li>
+                </ul>
+                <button class="secondary-button">Contact Sales</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2026 ReadGenius. All rights reserved.</p>
+        <p>Making knowledge accessible to everyone.</p>
+        <div class="social-links">
+            <a href="#">Twitter</a>
+            <a href="#">GitHub</a>
+            <a href="#">LinkedIn</a>
+            <a href="#">Email</a>
+        </div>
+    </footer>
+</body>
+</html>
