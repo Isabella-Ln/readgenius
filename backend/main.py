@@ -1,25 +1,28 @@
 """
-ReadGenius Backend - AI-Powered Document Analysis
-Main FastAPI application
+ReadGenius Backend - AI-powered reading assistant
+Free alternatives: Ollama (local) or Groq API
 """
-
-from fastapi import FastAPI, UploadFile, File, HTTPException
+import os
+import json
+import httpx
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-import google.generativeai as genai
 from pydantic import BaseModel
-import os
-from typing import Optional
-import json
+from typing import Optional, List
+from dotenv import load_dotenv
 
-# Initialize FastAPI app
+# Load .env file
+load_dotenv()
+
+# Initialize FastAPI
 app = FastAPI(
     title="ReadGenius API",
-    description="AI-powered document analysis using Google Gemini",
-    version="1.0.0"
+    description="AI-powered reading and learning assistant (Free tier)",
+    version="0.1.0"
 )
 
-# CORS middleware
+# CORS - allow all origins for development
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -28,198 +31,270 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Configure Gemini API
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-if not GEMINI_API_KEY:
-    raise ValueError("GEMINI_API_KEY environment variable not set")
+# Configuration
+# Option 1: Ollama (local) - set OLLAMA_URL, e.g., http://localhost:11434
+OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "gemma3:1b")
 
-genai.configure(api_key=GEMINI_API_KEY)
+# Option 2: Groq API (free tier) - set GROQ_API_KEY
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+GROQ_MODEL = "llama-3.2-3b-preview"  # Free model on Groq
 
-# Models
-class AnalysisRequest(BaseModel):
+print(f"[Config] OLLAMA_URL: {OLLAMA_URL}")
+print(f"[Config] OLLAMA_MODEL: {OLLAMA_MODEL}")
+print(f"[Config] GROQ_API_KEY set: {bool(GROQ_API_KEY)}")
+
+# ============= Models =============
+
+class DictionaryRequest(BaseModel):
+    word: str
+
+class DictionaryResponse(BaseModel):
+    word: str
+    phonetic: Optional[str] = None
+    definition: str
+    examples: List[str] = []
+    etymology: Optional[str] = None
+    synonyms: List[str] = []
+    antonyms: List[str] = []
+
+class ExplainRequest(BaseModel):
     text: str
-    analysis_type: str = "comprehensive"
+    language: str = "en"
 
-class AnalysisResponse(BaseModel):
-    summary: str
-    key_concepts: list[str]
-    qa_pairs: list[dict]
-    sentiment: str
-    reading_time: int
-    word_count: int
+class ChatRequest(BaseModel):
+    context: str
+    question: str
 
-# Routes
+class ChatResponse(BaseModel):
+    response: str
+    sources: Optional[List[str]] = None
+
+# ============= Helper Functions =============
+
+async def get_ai_response(prompt: str) -> str:
+    """
+    Get AI response using Ollama or Groq
+    """
+    # Try Ollama first (local, free)
+    if os.getenv("OLLAMA_URL"):
+        try:
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                response = await client.post(
+                    f"{OLLAMA_URL}/api/generate",
+                    json={
+                        "model": OLLAMA_MODEL,
+                        "prompt": prompt,
+                        "stream": False
+                    }
+                )
+                if response.status_code == 200:
+                    return response.json().get("response", "")
+        except Exception as e:
+            print(f"Ollama error: {e}")
+    
+    # Try Groq (cloud, free tier)
+    if GROQ_API_KEY:
+        try:
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                response = await client.post(
+                    "https://api.groq.com/openai/v1/chat/completions",
+                    headers={
+                        "Authorization": f"Bearer {GROQ_API_KEY}",
+                        "Content-Type": "application/json"
+                    },
+                    json={
+                        "model": GROQ_MODEL,
+                        "messages": [{"role": "user", "content": prompt}]
+                    }
+                )
+                if response.status_code == 200:
+                    return response.json()["choices"][0]["message"]["content"]
+        except Exception as e:
+            print(f"Groq error: {e}")
+    
+    raise HTTPException(
+        status_code=503,
+        detail="No AI provider configured. Set OLLAMA_URL or GROQ_API_KEY"
+    )
+
+# ============= API Routes =============
+
 @app.get("/")
 async def root():
-    """Health check endpoint"""
+    """Health check"""
     return {
         "status": "healthy",
         "service": "ReadGenius API",
-        "version": "1.0.0"
+        "version": "0.1.0"
     }
 
-@app.get("/health")
+@app.get("/api/health")
 async def health():
-    """Health check"""
+    """Health check endpoint"""
     return {"status": "ok"}
 
-@app.post("/api/analyze")
-async def analyze_document(file: UploadFile = File(...)):
+# ============= Dictionary Endpoints =============
+
+@app.post("/api/dictionary", response_model=DictionaryResponse)
+async def dictionary_lookup(request: DictionaryRequest):
     """
-    Analyze uploaded document using Gemini API
-    
-    Supported formats: .txt, .pdf, .docx
+    Look up a word definition using Free Dictionary API
     """
     try:
-        # Read file content
-        content = await file.read()
-        
-        # For MVP, we'll handle text files
-        if file.filename.endswith('.txt'):
-            text = content.decode('utf-8')
+        # Use Free Dictionary API (completely free)
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get(
+                f"https://api.dictionaryapi.dev/api/v2/entries/en/{request.word}"
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data and len(data) > 0:
+                    entry = data[0]
+                    first_meaning = entry.get("meanings", [{}])[0]
+                    first_def = first_meaning.get("definitions", [{}])[0]
+                    
+                    return DictionaryResponse(
+                        word=entry.get("word", request.word),
+                        phonetic=entry.get("phonetic") or (entry.get("phonetics", [{}])[0] or {}).get("text"),
+                        definition=first_def.get("definition", ""),
+                        examples=[first_def.get("example", "")] if first_def.get("example") else [],
+                        etymology=entry.get("origin"),
+                        synonyms=first_meaning.get("synonyms", [])[:5],
+                        antonyms=first_meaning.get("antonyms", [])[:3]
+                    )
+            
+            # Fallback to AI if word not found
+            prompt = f"""Define the word "{request.word}" in one simple sentence.
+Use simple English suitable for learners.
+Just return the definition, nothing else."""
+            
+            ai_response = await get_ai_response(prompt)
+            return DictionaryResponse(
+                word=request.word,
+                definition=ai_response.strip(),
+                examples=[]
+            )
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ============= Explanation Endpoints =============
+
+@app.post("/api/explain")
+async def explain_text(request: ExplainRequest):
+    """
+    Explain a piece of text in simple terms
+    """
+    try:
+        if request.language == "en":
+            prompt = f"""Explain this text in simple, clear English:
+
+"{request.text}"
+
+Break it down:
+1. Main idea (1 sentence)
+2. Key points (2-3 bullets)
+3. A simpler rephrasing
+
+Keep it beginner-friendly but insightful. Be concise."""
         else:
-            raise HTTPException(
-                status_code=400,
-                detail="Currently supporting .txt files. PDF and DOCX support coming soon."
-            )
-        
-        # Validate text length
-        if len(text) < 50:
-            raise HTTPException(
-                status_code=400,
-                detail="Document too short. Please provide at least 50 characters."
-            )
-        
-        # Call Gemini API for analysis
-        model = genai.GenerativeModel('gemini-pro')
-        
-        # Generate summary
-        summary_prompt = f"""Provide a concise summary (2-3 sentences) of the following text:
+            prompt = f"""请用简单的中文解释这段文字：
 
-{text[:2000]}"""
-        
-        summary_response = model.generate_content(summary_prompt)
-        summary = summary_response.text
-        
-        # Extract key concepts
-        concepts_prompt = f"""Extract 5-7 key concepts or main ideas from this text. Return as a JSON array of strings:
+"{request.text}"
 
-{text[:2000]}"""
-        
-        concepts_response = model.generate_content(concepts_prompt)
-        try:
-            concepts = json.loads(concepts_response.text)
-        except:
-            concepts = ["concept1", "concept2", "concept3"]
-        
-        # Generate Q&A pairs
-        qa_prompt = f"""Generate 3 important questions and answers based on this text. Return as JSON array with objects containing 'q' and 'a' keys:
+分解说明：
+1. 主要意思（一句话）
+2. 关键要点（2-3条）
+3. 简化解释
 
-{text[:2000]}"""
+保持简洁易懂。"""
         
-        qa_response = model.generate_content(qa_prompt)
-        try:
-            qa_pairs = json.loads(qa_response.text)
-        except:
-            qa_pairs = [{"q": "What is the main topic?", "a": "This document discusses various topics."}]
+        response_text = await get_ai_response(prompt)
         
-        # Sentiment analysis
-        sentiment_prompt = f"""Analyze the sentiment of this text. Respond with only one word: positive, negative, or neutral.
+        return {
+            "explanation": response_text,
+            "original_text": request.text
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-{text[:1000]}"""
+# ============= Chat Endpoints =============
+
+@app.post("/api/chat", response_model=ChatResponse)
+async def chat_with_context(request: ChatRequest):
+    """
+    Chat about the content being read
+    """
+    try:
+        prompt = f"""You are an AI reading assistant helping someone understand a book or document.
+
+The user is currently reading this passage:
+---
+{request.context}
+---
+
+The user asks: "{request.question}"
+
+Answer based on the content above. If the question isn't directly answerable from the text, acknowledge that and provide a helpful response anyway.
+
+Keep answers clear, engaging, and appropriate for an intermediate learner. Be concise and helpful."""
         
-        sentiment_response = model.generate_content(sentiment_prompt)
-        sentiment = sentiment_response.text.strip().lower()
+        response_text = await get_ai_response(prompt)
         
-        # Calculate metrics
-        word_count = len(text.split())
-        reading_time = max(1, word_count // 200)  # Assuming 200 words per minute
-        
-        return AnalysisResponse(
-            summary=summary,
-            key_concepts=concepts if isinstance(concepts, list) else ["concept1", "concept2"],
-            qa_pairs=qa_pairs if isinstance(qa_pairs, list) else [],
-            sentiment=sentiment,
-            reading_time=reading_time,
-            word_count=word_count
+        return ChatResponse(
+            response=response_text,
+            sources=[request.context[:100] + "..." if len(request.context) > 100 else request.context]
         )
     
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error analyzing document: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/analyze-text")
-async def analyze_text(request: AnalysisRequest):
+@app.post("/api/chat/simple")
+async def simple_chat(message: str):
     """
-    Analyze text directly (without file upload)
+    Simple chat without context
     """
     try:
-        text = request.text
-        
-        if len(text) < 50:
-            raise HTTPException(
-                status_code=400,
-                detail="Text too short. Please provide at least 50 characters."
-            )
-        
-        model = genai.GenerativeModel('gemini-pro')
-        
-        # Generate summary
-        summary_prompt = f"""Provide a concise summary (2-3 sentences) of the following text:
+        prompt = f"""You are a helpful reading and learning assistant. Help the user with their question.
 
-{text[:2000]}"""
-        
-        summary_response = model.generate_content(summary_prompt)
-        summary = summary_response.text
-        
-        # Extract key concepts
-        concepts_prompt = f"""Extract 5-7 key concepts from this text. Return as JSON array:
+User's question: {message}
 
-{text[:2000]}"""
+Provide a clear, helpful response. If they're learning English, keep explanations simple and include examples."""
         
-        concepts_response = model.generate_content(concepts_prompt)
-        try:
-            concepts = json.loads(concepts_response.text)
-        except:
-            concepts = ["concept1", "concept2"]
+        response_text = await get_ai_response(prompt)
         
-        # Calculate metrics
-        word_count = len(text.split())
-        reading_time = max(1, word_count // 200)
-        
-        return {
-            "summary": summary,
-            "key_concepts": concepts,
-            "word_count": word_count,
-            "reading_time": reading_time
-        }
+        return {"response": response_text}
     
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error analyzing text: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/features")
-async def get_features():
-    """Get list of available features"""
+# ============= Utility Endpoints =============
+
+@app.get("/api/usage")
+async def get_usage_info():
+    """Get API usage information"""
     return {
-        "features": [
-            "Document Summarization",
-            "Key Concepts Extraction",
-            "Q&A Generation",
-            "Sentiment Analysis",
-            "Reading Time Estimation",
-            "Word Count Analysis"
-        ],
-        "supported_formats": [".txt", ".pdf (coming soon)", ".docx (coming soon)"],
-        "max_file_size_mb": 10
+        "ai_provider": "ollama" if os.getenv("OLLAMA_URL") else ("groq" if GROQ_API_KEY else "none"),
+        "dictionary_api": "free-dictionary-api (always free)",
+        "features_available": [
+            "dictionary_lookup (free)",
+            "text_explanation (AI)",
+            "ai_chat (AI)",
+        ]
     }
+
+# ============= Run Server =============
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    port = int(os.getenv("PORT", "8000"))
+    uvicorn.run(app, host="0.0.0.0", port=port)

@@ -1,184 +1,189 @@
-# ReadGenius - AI-Powered Document Intelligence Platform
+# ReadGenius - AI Reading Assistant
 
-## 🎯 Project Overview
+> 让阅读真正变成学习
 
-**ReadGenius** is an intelligent document analysis platform that leverages Google's Gemini API to transform how people interact with information. Upload any document, article, or text content, and get instant AI-powered insights including summaries, key concepts, Q&A generation, and sentiment analysis.
+## 🎯 产品概述
 
-### Core Problem We Solve
-- **Information Overload**: Users struggle to extract value from large volumes of text
-- **Time Constraints**: Professionals need quick, accurate summaries without reading entire documents
-- **Knowledge Retention**: Students and researchers need better ways to understand and retain information
+ReadGenius 是一个 AI 驱动的沉浸式阅读学习平台，专注于解决英文阅读中的痛点：
 
-### Target Users
-- 📚 Students & Researchers
-- 💼 Business Professionals
-- 📰 Content Creators
-- 🔬 Academics
+- 读英文书遇到生词 → 点词即查，不需要退出
+- 长难句看不懂 → 选中片段，AI 立刻解释
+- 读完就忘 → 生词本 + 复习系统
+
+**核心理念**：AI 无缝融入，不需要退出，不需要切换，一切自然而然发生。
 
 ---
 
-## ✨ Key Features
+## 🚀 快速开始
 
-### Phase 1 (MVP - Current)
-- ✅ Document Upload (PDF, TXT, DOCX)
-- ✅ AI-Powered Summarization
-- ✅ Key Concepts Extraction
-- ✅ Automatic Q&A Generation
-- ✅ Sentiment Analysis
-- ✅ Export Results (PDF, JSON)
+### 前置要求
 
-### Phase 2 (Roadmap)
-- 🔄 Multi-document Comparison
-- 📊 Advanced Analytics Dashboard
-- 🌐 Team Collaboration Features
-- 🔐 Enterprise Security & SSO
-- 📱 Mobile App
-
----
-
-## 🛠 Technology Stack
-
-### Frontend
-- **React 18** - Modern UI framework
-- **TypeScript** - Type-safe development
-- **Tailwind CSS** - Utility-first styling
-- **Vite** - Lightning-fast build tool
-
-### Backend
-- **Python 3.11+** - Core language
-- **FastAPI** - High-performance API framework
-- **Google Gemini API** - AI intelligence
-- **Pydantic** - Data validation
-
-### Infrastructure
-- **Vercel** - Frontend hosting (free tier)
-- **Google Cloud Run** - Backend hosting (free tier eligible)
-- **Cloud Storage** - Document storage
-
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-- Python 3.11+
 - Node.js 18+
-- Google Cloud Account with Gemini API enabled
-- API Key from Google Cloud Console
+- Python 3.11+
+- Google Gemini API Key（可选，用于 AI 功能）
 
-### Installation
+### 安装
 
-#### Backend Setup
 ```bash
-cd backend
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+# 克隆项目
+cd frontend
+
+# 安装前端依赖
+npm install
+
+# 安装后端依赖
+cd ../backend
 pip install -r requirements.txt
-
-# Set environment variables
-export GEMINI_API_KEY="your-api-key-here"
-export ENVIRONMENT="development"
-
-# Run server
-uvicorn main:app --reload
 ```
 
-#### Frontend Setup
+### 运行
+
 ```bash
+# 终端 1: 启动后端
+cd backend
+export GEMINI_API_KEY=your-api-key  # Windows: set GEMINI_API_KEY=your-api-key
+uvicorn main:app --reload --port 8000
+
+# 终端 2: 启动前端
 cd frontend
-npm install
 npm run dev
 ```
 
-Visit `http://localhost:5173` to see the app.
+访问 http://localhost:5173
 
 ---
 
-## 📊 Why Google Cloud?
+## 📁 项目结构
 
-ReadGenius is built to scale on Google Cloud infrastructure:
-
-1. **Gemini API** - State-of-the-art multimodal AI for document understanding
-2. **Cloud Run** - Serverless backend (pay only for what you use)
-3. **Cloud Storage** - Secure, scalable document storage
-4. **BigQuery** - Analytics on user behavior and document insights
-5. **Vertex AI** - Future ML model fine-tuning capabilities
-
-### Cost Efficiency
-- Free tier covers initial usage
-- $2,000 Google Cloud credits enables 6-12 months of operation
-- Scalable pricing as user base grows
-
----
-
-## 📈 Business Model
-
-### Revenue Streams
-1. **Freemium Model** - 5 free analyses/month, then premium
-2. **API Access** - Developers can integrate ReadGenius API
-3. **Enterprise Plans** - Custom solutions for organizations
-4. **B2B Partnerships** - Integration with productivity tools
-
-### Metrics
-- Target: 10,000 users in Year 1
-- Average Revenue Per User: $5-15/month
-- Projected Year 1 Revenue: $50K-150K
-
----
-
-## 🔐 Security & Privacy
-
-- ✅ End-to-end encryption for document uploads
-- ✅ GDPR compliant data handling
-- ✅ No document retention without user consent
-- ✅ SOC 2 Type II ready architecture
-
----
-
-## 📝 API Documentation
-
-### Analyze Document
-```bash
-POST /api/analyze
-Content-Type: multipart/form-data
-
-{
-  "file": <binary>,
-  "analysis_type": "comprehensive"
-}
-
-Response:
-{
-  "summary": "...",
-  "key_concepts": ["concept1", "concept2"],
-  "qa_pairs": [{"q": "...", "a": "..."}],
-  "sentiment": "positive",
-  "reading_time": 5
-}
+```
+readgenius-project/
+├── frontend/                 # React 前端
+│   ├── src/
+│   │   ├── components/      # UI 组件
+│   │   │   ├── Library.tsx  # 书架
+│   │   │   ├── PDFReader.tsx # PDF 阅读器
+│   │   │   ├── WordCard.tsx  # 查词卡片
+│   │   │   └── AIChat.tsx    # AI 对话
+│   │   ├── hooks/           # 自定义 Hooks
+│   │   ├── App.tsx          # 主应用
+│   │   └── main.tsx         # 入口
+│   └── package.json
+│
+├── backend/                  # Python 后端
+│   ├── main.py              # API 服务
+│   └── requirements.txt     # 依赖
+│
+└── README.md
 ```
 
 ---
 
-## 🎓 Team
+## ✨ 核心功能
 
-- **Founder & Lead Developer**: [Your Name]
-- **Location**: [Your Location]
-- **Founded**: 2026
+### P0 - MVP
+
+| 功能 | 描述 |
+|------|------|
+| ✅ PDF 导入 | 拖拽上传，本地存储（IndexedDB） |
+| ✅ 点词查词 | 点任何词，立刻精美词卡 |
+| ✅ 段落解释 | 选中片段，AI 立刻解释 |
+| ✅ AI 对话 | 选片段问问题，基于本书语境 |
+
+### P1 - 第二批
+
+| 功能 | 状态 |
+|------|------|
+| ⏳ 生词本 | 规划中 |
+| ⏳ 发音 | 规划中 |
+| ⏳ 阅读进度 | 规划中 |
+| ⏳ 欧路词典导入 | 规划中 |
 
 ---
 
-## 📞 Contact & Links
+## 🛠 技术栈
 
-- 🌐 Website: [readgenius.app](https://readgenius.app)
-- 📧 Email: hello@readgenius.app
-- 🐙 GitHub: [github.com/readgenius](https://github.com/readgenius)
-- 🐦 Twitter: [@readgenius_ai](https://twitter.com/readgenius_ai)
+### 前端
+- **React 18** + TypeScript
+- **Vite** - 构建工具
+- **Tailwind CSS** - 样式
+- **PDF.js** - PDF 渲染
+- **IndexedDB** - 本地存储
+
+### 后端
+- **FastAPI** - API 框架
+- **Google Gemini API** - AI 能力
+- **Python 3.11+**
+
+### 部署
+- **前端**: Vercel
+- **后端**: Railway / Google Cloud Run
 
 ---
 
-## 📄 License
+## 🔧 环境变量
 
-MIT License - See LICENSE file for details
+### 后端 (.env)
+```env
+GEMINI_API_KEY=your-gemini-api-key
+PORT=8000
+```
+
+### 前端 (.env)
+```env
+VITE_API_URL=http://localhost:8000
+```
 
 ---
 
-**ReadGenius** - Making knowledge accessible to everyone. 🚀
+## 📊 数据存储
+
+### 本地优先架构
+- **PDF 文件**: IndexedDB（不上传，保护隐私）
+- **生词本**: localStorage
+- **阅读进度**: localStorage
+- **用户数据**（可选）: 云端 PostgreSQL
+
+---
+
+## 🎨 设计原则
+
+1. **不打断阅读节奏** - 查词在原地弹出，不需要切换页面
+2. **精美但不花哨** - 专注内容，减少视觉干扰
+3. **响应要快** - 查词 < 1秒，AI 回复 < 3秒
+4. **离线可用** - 本地优先，网络只是增强
+
+---
+
+## 📝 开发日志
+
+### v0.1.0 (当前)
+- PDF 导入 + 本地存储
+- PDF 阅读器（分页、缩放）
+- 点词查词（精美词卡）
+- 段落选中解释
+- AI 对话
+
+---
+
+## 🤝 贡献
+
+欢迎提交 Issue 和 Pull Request！
+
+---
+
+## 📄 许可证
+
+MIT License
+
+---
+
+## 🔗 相关链接
+
+- [Google Gemini API](https://ai.google.dev)
+- [Vercel](https://vercel.com)
+- [Railway](https://railway.app)
+- [PDF.js](https://mozilla.github.io/pdf.js/)
+
+---
+
+**让阅读真正变成学习** 📚
